@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proximity Search API - Live Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">📍</div>
+        <div>
+          <h1>Proximity Search API</h1>
+          <p class="subtitle">CSD Lab 7 Containerised Full-Stack Platform</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="badge" id="api-status-badge">Checking API...</span>
+        <a href="/docs" target="_blank" class="nav-link">Swagger Docs</a>
+        <a href="/health" target="_blank" class="nav-link">Health Check</a>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Search Controls Card -->
+      <section class="card controls-card">
+        <div class="card-header">
+          <h2>Query Parameters</h2>
+          <span class="badge-secondary">GET / POST /search/</span>
+        </div>
+
+        <form id="search-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="lat">Latitude (0.0 – 1.0)</label>
+              <input type="number" id="lat" name="lat" step="0.000001" min="0" max="1" value="0.505051" required>
+            </div>
+            <div class="form-group">
+              <label for="long">Longitude (0.0 – 1.0)</label>
+              <input type="number" id="long" name="long" step="0.000001" min="0" max="1" value="0.505051" required>
+            </div>
+          </div>
+
+          <div class="preset-buttons">
+            <span class="preset-label">Quick Presets:</span>
+            <button type="button" class="btn-preset" data-lat="0.505051" data-long="0.505051" data-cat="hospital" data-rad="0.2">Center (Hospital)</button>
+            <button type="button" class="btn-preset" data-lat="0.202020" data-long="0.303030" data-cat="pharmacy" data-rad="0.15">SW (Pharmacy)</button>
+            <button type="button" class="btn-preset" data-lat="0.808080" data-long="0.808080" data-cat="cafe" data-rad="0.25">NE (Cafe)</button>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cat">Category</label>
+              <select id="cat" name="cat" required>
+                <option value="hospital" selected>Hospital</option>
+                <option value="pharmacy">Pharmacy</option>
+                <option value="bank">Bank</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="cafe">Cafe</option>
+                <option value="school">School</option>
+                <option value="store">Store</option>
+                <option value="park">Park</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="rad">Radius (<span id="rad-val">0.20</span>)</label>
+              <input type="range" id="rad-slider" min="0.02" max="0.5" step="0.01" value="0.20">
+              <input type="hidden" id="rad" name="rad" value="0.20">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="link-mode">Link Source</label>
+              <select id="link-mode">
+                <option value="default" selected>Server Default (link.txt)</option>
+                <option value="file">Upload Custom File</option>
+              </select>
+            </div>
+            <div class="form-group" id="file-upload-group" style="display: none;">
+              <label for="link-file">Custom link.txt file</label>
+              <input type="file" id="link-file" accept=".txt">
+            </div>
+            <div class="form-group">
+              <label for="http-method">HTTP Method</label>
+              <select id="http-method">
+                <option value="GET" selected>GET (Query Parameters)</option>
+                <option value="POST-JSON">POST (JSON Body)</option>
+                <option value="POST-FORM">POST (Multipart Form)</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-search">
+            <span class="btn-text">Execute Proximity Search</span>
+            <span class="spinner" id="search-spinner" style="display:none;"></span>
+          </button>
+        </form>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <span class="stat-label">Response Time</span>
+            <span class="stat-value" id="stat-latency">-- ms</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">HTTP Status</span>
+            <span class="stat-value" id="stat-status">--</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Results Count</span>
+            <span class="stat-value" id="stat-count">--</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Spatial Visualization Card -->
+      <section class="card visual-card">
+        <div class="card-header">
+          <h2>100 × 100 Spatial Grid Visualizer</h2>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot dot-query"></span> Query Center</span>
+            <span class="legend-item"><span class="legend-dot dot-result"></span> Recommended (Top 10)</span>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="gridCanvas" width="450" height="450"></canvas>
+        </div>
+        <p class="canvas-caption">Interactive view showing query point, search radius circle, and recommended locations plotted on the normalized unit grid.</p>
+      </section>
+    </main>
+
+    <!-- Response Output Card -->
+    <section class="card results-card">
+      <div class="card-header">
+        <h2>Recommended Location IDs (API Output)</h2>
+        <button type="button" class="btn-secondary" id="btn-copy">Copy JSON</button>
+      </div>
+      <div class="code-container">
+        <pre><code id="json-output">// Click "Execute Proximity Search" to fetch recommendations...</code></pre>
+      </div>
+
+      <div class="results-table-container">
+        <table class="results-table" id="results-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Location ID</th>
+              <th>Category</th>
+              <th>Grid Approx (X, Y)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="results-body">
+            <tr>
+              <td colspan="5" class="empty-state">No search executed yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>CSD Assignment 7 &bull; Student: Kanyadara Ganesh babu (12341080) &bull; Multi-Container Architecture (FastAPI + Nginx Reverse Proxy)</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -13,8 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from service import LocationService
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOCATIONS_PATH = os.path.join(BASE_DIR, "locations.csv")
-DEFAULT_LINK_PATH = os.path.join(BASE_DIR, "link.txt")
+LOCATIONS_PATH = os.environ.get("LOCATIONS_FILE", os.path.join(BASE_DIR, "locations.csv"))
+DEFAULT_LINK_PATH = os.environ.get("LINK_FILE", os.path.join(BASE_DIR, "link.txt"))
 
 # Initialize Location Service
 service = LocationService(LOCATIONS_PATH, DEFAULT_LINK_PATH)

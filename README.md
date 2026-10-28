@@ -86,3 +86,32 @@ cd /home/student/assign-7
 # Run tests
 /opt/conda/bin/python3 -m unittest test_app.py test_service.py
 ```
+
+---
+
+## Single-Command Containerised Full Stack (Personal System)
+
+Deploy the complete multi-service stack with a single command:
+
+```bash
+# Build and run full stack in background
+docker compose up --build -d
+
+# Check service health and port status
+docker compose ps
+
+# Run automated unit and integration tests inside container
+docker compose run --rm tester
+
+# View live service logs
+docker compose logs -f
+
+# Stop and tear down stack
+docker compose down
+```
+
+### URLs on Personal System:
+- **Interactive Web Evaluation Dashboard:** `http://localhost:6214/` or `http://localhost/`
+- **Search API Endpoint:** `http://localhost:6214/search/` (via Nginx proxy) and `http://localhost:6000/search/` (direct API)
+- **Interactive Swagger Docs:** `http://localhost:6214/docs`
+- **Health Check:** `http://localhost:6214/health`

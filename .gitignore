@@ -2,6 +2,13 @@
 link.txt
 locations.csv
 report.log
-report.tex
+report.aux
+report.out
+report.toc
+scratch/
+__pycache__/
 test_app.py
 test_service.py
+images/
+report.pdf
+report.tex
